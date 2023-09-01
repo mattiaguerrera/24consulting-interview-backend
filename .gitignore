@@ -1,0 +1,14 @@
+# See http://help.github.com/ignore-files/ for more about ignoring files.
+
+# compiled output
+**/bin
+**/obj
+.vs/**
+.vs/*
+# /.vs
+# *.v7.bin
+# *.v2
+# *.suo
+# *.bin
+# *.vsidx
+# *.dtbcache.v2
