@@ -168,7 +168,7 @@ namespace Dapper.Infrastructure.Repository
             bool isValid;
             messages = null;
 
-            string filePath = @"C:\Users\mguerrera\OneDrive - TERRANOVA\Documenti\_repos\app\24consulting_interview\24consulting_interview_backend\Infrastructure\Sql\CheckOrderStep.sql";
+            string filePath = @"C:\Users\mguerrera\OneDrive - TERRANOVA\Documenti\_repos\app\24consulting_interview\24consulting-interview-backend-main\Infrastructure\Sql\CheckOrderStep.sql";
             string sql = File.ReadAllText(filePath);
 
             var param = new { IdOrderStep = idOrderStepNew, IdOrder = order.IdOrder };
