@@ -38,6 +38,15 @@ namespace WebApi
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Interview Backend 24/C", Version = "v1" });
                 c.ResolveConflictingActions(apiDescriptions => apiDescriptions.First());
             });
+
+            services.AddLogging(options =>
+            {
+                options.AddSimpleConsole(c =>
+                {
+                    c.TimestampFormat = "[yyyy-MM-dd HH:mm:ss] ";
+                    // c.UseUtcTimestamp = true; // something to consider
+                });
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -1,7 +1,10 @@
 ﻿
+using Application.Interfaces;
+using Infrastructure.Repository;
 using Interview.Backend.Entities;
 using Interview.Backend.Interfaces;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using System.ComponentModel.DataAnnotations;
 using System.Data.SqlClient;
 using Validations;
@@ -12,10 +15,15 @@ namespace Dapper.Infrastructure.Repository
     {
         private readonly string? _dbConnectionString;
         private readonly IOrderStepRepository _orderStepRepository;
-        public OrderRepository(IConfiguration configuration, IOrderStepRepository orderStepRepository)
+        private readonly ILoggerService _loggerService;
+        public OrderRepository(IConfiguration configuration,
+            IOrderStepRepository orderStepRepository,
+            ILoggerService loggerService
+            )
         {
-            this._dbConnectionString = configuration.GetConnectionString("DefaultConnection");
+            _dbConnectionString = configuration.GetConnectionString("DefaultConnection");
             _orderStepRepository = orderStepRepository;
+            _loggerService = loggerService;
         }
 
         public async Task<IReadOnlyList<Order>> GetAllAsync()
@@ -53,30 +61,44 @@ namespace Dapper.Infrastructure.Repository
 
             using (var connection = new SqlConnection(_dbConnectionString))
             {
-                connection.Open();
-
-                var orders = await connection.QueryAsync<Order, OrderStep, PaymentMethod, Customer, Product, Order>(
-                                sql,
-                                (order, orderStep, paymentMethod, customer, product) =>
-                                {
-                                    order.OrderStep = orderStep;
-                                    order.PaymentMethod = paymentMethod;
-                                    order.Customer = customer;
-                                    order.Products.Add(product);
-                                    return order;
-                                },
-                                new { Id = id },
-                                splitOn: "IdOrder,IdOrderStep,IdPaymentMethod,IdCustomer, IdProduct"
-                                );
-
-                var result = orders.GroupBy(p => p.IdOrder).Select(g =>
+                try
                 {
-                    var groupedPost = g.First();
-                    groupedPost.Products = g.Select(p => p.Products.Single()).ToList();
-                    return groupedPost;
-                }).Distinct().FirstOrDefault();
+                    connection.Open();
 
-                return result;
+                    var orders = await connection.QueryAsync<Order, OrderStep, PaymentMethod, Customer, Product, Order>(
+                                    sql,
+                                    (order, orderStep, paymentMethod, customer, product) =>
+                                    {
+                                        order.OrderStep = orderStep;
+                                        order.PaymentMethod = paymentMethod;
+                                        order.Customer = customer;
+                                        order.Products.Add(product);
+                                        return order;
+                                    },
+                                    new { Id = id },
+                                    splitOn: "IdOrder,IdOrderStep,IdPaymentMethod,IdCustomer, IdProduct"
+                                    );
+
+                    var result = orders.GroupBy(p => p.IdOrder).Select(g =>
+                    {
+                        var groupedPost = g.First();
+                        groupedPost.Products = g.Select(p => p.Products.Single()).ToList();
+                        return groupedPost;
+                    }).Distinct().FirstOrDefault();
+
+                    if (result == null)
+                        _loggerService.Log($"the order with {id} was not found", LogLevel.Warning);
+
+                    _loggerService.Log($"order retrieved with id {result.IdOrder} ", LogLevel.Trace);
+                    return result;
+                }
+                catch (Exception ex)
+                {
+
+                    _loggerService.Log(ex.InnerException.Message, LogLevel.Warning);
+                    throw;
+                }
+
             }
         }
 

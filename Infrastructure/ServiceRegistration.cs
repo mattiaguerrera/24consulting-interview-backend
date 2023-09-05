@@ -1,4 +1,6 @@
-﻿using Dapper.Infrastructure.Repository;
+﻿using Application.Interfaces;
+using Dapper.Infrastructure.Repository;
+using Infrastructure.Repository;
 using Interview.Backend.Interfaces;
 using Interview.Backend.Repository;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,6 +18,7 @@ namespace Interview.Backend.Infrastructure
             services.AddTransient<IOrderStepFlowRepository, OrderStepFlowRepository>();
             services.AddTransient<IPaymentMethodRepository, PaymentMethodRepository>();
             services.AddTransient<IUnitOfWork, UnitOfWork>();
+            services.AddSingleton<ILoggerService, LoggerService>();
         }
     }
 }
